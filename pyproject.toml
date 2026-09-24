@@ -1,0 +1,27 @@
+[project]
+name = "folder-reader"
+version = "0.1.0"
+description = "Inventario de carpetas y archivos a Excel, con conteo de paginas para PDF y Word"
+readme = "README.md"
+authors = [
+    { name = "delany-ramirez", email = "delram@utp.edu.co" }
+]
+requires-python = ">=3.12"
+dependencies = [
+    "olefile>=0.47",
+    "openpyxl>=3.1.5",
+    "pypdf>=6.19.0",
+    "pywin32>=312 ; sys_platform == 'win32'",
+]
+
+[project.scripts]
+folder-reader = "folder_reader.cli:main"
+
+[build-system]
+requires = ["uv_build>=0.11.2,<0.12.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "pytest>=9.1.1",
+]
