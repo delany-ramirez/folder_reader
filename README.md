@@ -34,9 +34,32 @@ directorio actual, de modo que una corrida nunca pisa a la anterior.
 | `--incluir-ocultos` | Incluye archivos y carpetas marcados como ocultos o de sistema. |
 | `--sin-paginas` | No cuenta páginas. Mucho más rápido si solo interesan las fechas. |
 | `--sin-word` | No abre los documentos en Word: usa el conteo guardado en los metadatos. Mucho más rápido, pero puede estar desactualizado. |
+| `--sin-descomprimir` | No extrae los `.zip` y `.rar` de la carpeta raíz (ver abajo). |
 | `--profundidad N` | Limita el recorrido a N niveles (`1` = solo la carpeta raíz). |
 | `--ext .pdf .docx` | Inventaria solo esas extensiones. |
 | `-v`, `--verbose` | Muestra el avance del escaneo. |
+
+## Archivos comprimidos (`.zip`, `.rar`)
+
+Antes de escanear, cada `.zip` o `.rar` que esté **directamente en la carpeta raíz** se
+extrae en una carpeta hermana con su mismo nombre (`Anexos.zip` → `Anexos\`), y su
+contenido se inventaria como el de cualquier otra subcarpeta: con páginas, fechas y
+**Carpeta nivel 1** = `Anexos`. El comprimido original no se toca y también aparece en el
+inventario como un archivo más.
+
+- Los comprimidos que están en subcarpetas, o dentro de otro comprimido, **no** se extraen.
+- Si la carpeta de destino ya existe, se da por descomprimido y no se toca nada. Por eso
+  volver a correr el inventario no duplica ni pisa archivos.
+- Si el comprimido trae una sola carpeta con su mismo nombre (lo típico al comprimir una
+  carpeta entera), se evita el `Anexos\Anexos\…`, igual que «Extraer aquí».
+- En los `.zip` se conserva la fecha de modificación original de cada archivo, y los
+  nombres con tildes o eñes creados por el Explorador de Windows se leen bien. La fecha de
+  creación, en cambio, es la de la extracción.
+- Los `.zip` se extraen con Python. Los `.rar` (y los `.zip` con métodos que Python no
+  soporta, como Deflate64) se extraen con **WinRAR** o **7-Zip** si están instalados, y
+  si no, con el `tar.exe` que trae Windows 10/11.
+- Un comprimido dañado o con contraseña no detiene nada: el resumen final lo lista con el
+  motivo, y no quedan carpetas a medio extraer.
 
 ## Qué se ignora
 

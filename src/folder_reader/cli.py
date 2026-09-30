@@ -8,6 +8,7 @@ from datetime import datetime
 from pathlib import Path
 
 from folder_reader import __version__
+from folder_reader.comprimidos import ResultadoDescompresion, descomprimir_en_raiz
 from folder_reader.excel import Fila, escribir_excel
 from folder_reader.pages import (
     ESTADO_NO_APLICA,
@@ -55,6 +56,14 @@ def construir_parser() -> argparse.ArgumentParser:
         help=(
             "No abre los documentos en Word: usa el conteo que quedo guardado "
             "en los metadatos. Mucho mas rapido, pero puede estar desactualizado."
+        ),
+    )
+    parser.add_argument(
+        "--sin-descomprimir",
+        action="store_true",
+        help=(
+            "No descomprime los .zip y .rar de la carpeta raiz. Por defecto se "
+            "extraen en una carpeta con su mismo nombre y se inventaria su contenido."
         ),
     )
     parser.add_argument(
@@ -143,6 +152,16 @@ def main(argv: list[str] | None = None) -> int:
         destino = destino.with_suffix(".xlsx")
     destino = destino.resolve()
 
+    descompresion = ResultadoDescompresion()
+    if not args.sin_descomprimir:
+        descomprimir_en_raiz(
+            raiz, incluir_ocultos=args.incluir_ocultos, resultado=descompresion
+        )
+        if args.verbose and descompresion.descomprimidos:
+            print(
+                f"Descomprimidos: {len(descompresion.descomprimidos)}", file=sys.stderr
+            )
+
     print(f"Escaneando: {raiz}", file=sys.stderr)
 
     resultado = ResultadoRecorrido()
@@ -208,7 +227,7 @@ def main(argv: list[str] | None = None) -> int:
         print(f"No se pudo escribir {destino}: {error}", file=sys.stderr)
         return 1
 
-    _resumen(destino, filas, escritas, resultado, con_error, args)
+    _resumen(destino, filas, escritas, resultado, descompresion, con_error, args)
     return 0
 
 
@@ -217,6 +236,7 @@ def _resumen(
     filas: list[Fila],
     escritas: int,
     resultado: ResultadoRecorrido,
+    descompresion: ResultadoDescompresion,
     con_error: int,
     args: argparse.Namespace,
 ) -> None:
@@ -234,6 +254,17 @@ def _resumen(
             print(f"  - {carpeta}")
         if len(resultado.carpetas_inaccesibles) > 5:
             print(f"  ... y {len(resultado.carpetas_inaccesibles) - 5} mas")
+    if descompresion.descomprimidos:
+        print(f"Comprimidos descomprimidos en la raiz: {len(descompresion.descomprimidos)}")
+    if descompresion.ya_existian:
+        print(
+            "Comprimidos no extraidos porque ya existe su carpeta: "
+            f"{len(descompresion.ya_existian)}"
+        )
+    if descompresion.fallidos:
+        print(f"Comprimidos que no se pudieron descomprimir: {len(descompresion.fallidos)}")
+        for nombre, motivo in descompresion.fallidos:
+            print(f"  - {nombre}: {motivo}")
     if resultado.archivos_inaccesibles:
         print(f"Archivos sin permiso de lectura: {len(resultado.archivos_inaccesibles)}")
     print(f"\nExcel generado: {destino}")
