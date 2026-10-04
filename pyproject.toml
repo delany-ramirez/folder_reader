@@ -10,12 +10,14 @@ requires-python = ">=3.12"
 dependencies = [
     "olefile>=0.47",
     "openpyxl>=3.1.5",
+    "pillow>=12.3.0",
     "pypdf>=6.19.0",
     "pywin32>=312 ; sys_platform == 'win32'",
 ]
 
 [project.scripts]
 folder-reader = "folder_reader.cli:main"
+hoja-control = "folder_reader.cli_hoja_control:main"
 
 [build-system]
 requires = ["uv_build>=0.11.2,<0.12.0"]

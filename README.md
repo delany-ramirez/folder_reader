@@ -61,6 +61,60 @@ inventario como un archivo más.
 - Un comprimido dañado o con contraseña no detiene nada: el resumen final lo lista con el
   motivo, y no quedan carpetas a medio extraer.
 
+## Hojas de control (`hoja-control`)
+
+Un segundo comando vuelca el contenido de las carpetas en el formato institucional
+**Hoja de control** (Gestión de Documentos, código 1122 - F15). Se genera **un archivo por
+carpeta madre**: cada subcarpeta de primer nivel de la ruta indicada.
+
+```bash
+uv run hoja-control "D:\Contratos 2022" -o "D:\Hojas de control"
+```
+
+Con una carpeta `6170-2022` dentro de `D:\Contratos 2022` se obtiene
+`HOJA DE CONTROL 6170-2022.xlsx`. Dentro de cada hoja:
+
+- Cada subcarpeta abre con una fila en **negrilla** con su nombre (`1. PRECONTRACTUAL`), y
+  debajo van sus archivos. Las subcarpetas anidadas muestran la ruta relativa a la carpeta
+  madre (`2. CONTRACTUAL\5. INFORMES`). Los archivos que están en la propia carpeta madre
+  van primero, sin fila de carpeta.
+- Carpetas y archivos se ordenan como en el Explorador, comparando los números por su
+  valor: `1, 2, 3, 10, 11` (no `1, 10, 11, 2`), `2. RP` antes que `10. CEDULA` y `2.9`
+  antes que `2.10`.
+- **ITEM** numera todas las filas, también las de carpeta, como en la plantilla.
+- **FECHA DOCUMENTO** y **FECHA REGISTRO** llevan las dos la fecha de guardado del
+  documento (la de [«Guardado el»](#guardado-el-documento)), sin hora y en `dd/mm/aaaa`.
+  Los archivos que no registran esa fecha (imágenes, `.txt`, PDF sin `/ModDate`) las dejan
+  **en blanco**.
+- **CANTIDAD DE FOLIOS** es el número de páginas, calculado igual que en el inventario. Queda
+  vacía en los formatos sin páginas (`.xlsx`, imágenes…). **FOLIO** se deja vacía para
+  diligenciarla a mano.
+- La fila **TOTAL** suma los folios y, debajo, se conserva el pie de firmas.
+
+Los `.zip` y `.rar` de la raíz se descomprimen antes, igual que en el inventario, así que
+cada comprimido se convierte en una carpeta madre más. Los archivos sueltos en la raíz no
+pertenecen a ninguna carpeta madre: se cuentan en el resumen y no van en ninguna hoja.
+
+| Opción | Para qué sirve |
+| --- | --- |
+| `-o`, `--salida` | Carpeta donde se guardan los `.xlsx` (por defecto, la actual). Si ya existe una hoja con el mismo nombre, se reemplaza. |
+| `--carpeta-madre` | La ruta es ella misma una carpeta madre: se genera una sola hoja. |
+| `--plantilla` | Usa otra plantilla `.xlsx` en lugar de la incluida. |
+| `--sin-word`, `--sin-descomprimir`, `--incluir-ocultos`, `--ext` | Igual que en `folder-reader`. |
+
+### La plantilla
+
+La plantilla incluida está en `src/folder_reader/plantillas/hoja_control.xlsx`. El programa
+no reconstruye el formato: copia el de la plantilla. Busca la fila de encabezado (la que
+tiene `ITEM`), toma como modelo la primera fila con el nombre en negrilla (carpeta) y la
+primera sin negrilla (documento), y replica esas filas tantas veces como haga falta. Todo lo
+que hay desde la fila `TOTAL` hacia abajo se reubica debajo de los datos, y la fórmula
+`=SUM(…)` se ajusta al rango real.
+
+Por eso una plantilla propia (`--plantilla`), incluso una hoja ya diligenciada, funciona
+siempre que tenga las columnas `ITEM`, `FECHA DOCUMENTO`, `TIPO DOCUMENTAL`,
+`CANTIDAD DE FOLIOS` y `FECHA REGISTRO`, y una fila `TOTAL`.
+
 ## Qué se ignora
 
 - Archivos que crea el sistema operativo por su cuenta: `desktop.ini`, `Thumbs.db`,

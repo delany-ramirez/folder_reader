@@ -14,3 +14,4 @@ wheels/
 
 # Inventarios generados por la herramienta
 *.xlsx
+!src/folder_reader/plantillas/*.xlsx
